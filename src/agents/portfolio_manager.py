@@ -3,6 +3,10 @@ from langchain_core.messages import HumanMessage
 from langchain_core.prompts import ChatPromptTemplate
 
 from src.graph.state import AgentState, show_agent_reasoning
+from src.portfolio.optimizer import (
+    mean_variance_optimization,
+    risk_parity_optimization,
+)
 from pydantic import BaseModel, Field
 from typing_extensions import Literal
 from src.utils.progress import progress
@@ -66,6 +70,21 @@ def portfolio_management_agent(state: AgentState, agent_id: str = "portfolio_man
     # Add current_prices to the state data so it's available throughout the workflow
     state["data"]["current_prices"] = current_prices
 
+    # Use portfolio optimizer to suggest target weights if covariance data is available
+    target_weights = None
+    covariance = state["data"].get("covariance_matrix")
+    if covariance is not None:
+        optimizer_choice = state["metadata"].get("optimizer", "mean_variance")
+        if optimizer_choice == "risk_parity":
+            target_weights = risk_parity_optimization(analyst_signals, covariance, tickers)
+        else:
+            target_weights = mean_variance_optimization(analyst_signals, covariance, tickers)
+
+        state["data"]["target_weights"] = target_weights.to_dict()
+
+        if state["metadata"].get("show_reasoning"):
+            show_agent_reasoning(state["data"]["target_weights"], "Portfolio Optimizer")
+
     progress.update_status(agent_id, None, "Generating trading decisions")
 
     # Generate the trading decision
@@ -77,6 +96,7 @@ def portfolio_management_agent(state: AgentState, agent_id: str = "portfolio_man
         portfolio=portfolio,
         agent_id=agent_id,
         state=state,
+        target_weights=None if target_weights is None else target_weights.to_dict(),
     )
 
     # Create the portfolio management message
@@ -105,6 +125,7 @@ def generate_trading_decision(
     portfolio: dict[str, float],
     agent_id: str,
     state: AgentState,
+    target_weights: dict[str, float] | None = None,
 ) -> PortfolioManagerOutput:
     """Attempts to get a decision from the LLM with retry logic"""
     # Create the prompt template
@@ -167,6 +188,9 @@ def generate_trading_decision(
               Maximum Shares Allowed For Purchases:
               {max_shares}
 
+              Optimizer Suggested Target Weights:
+              {target_weights}
+
               Portfolio Cash: {portfolio_cash}
               Current Positions: {portfolio_positions}
               Current Margin Requirement: {margin_requirement}
@@ -213,6 +237,7 @@ def generate_trading_decision(
         "signals_by_ticker": json.dumps(signals_by_ticker, indent=2),
         "current_prices": json.dumps(current_prices, indent=2),
         "max_shares": json.dumps(max_shares, indent=2),
+        "target_weights": json.dumps(target_weights, indent=2) if target_weights else "{}",
         "portfolio_cash": f"{portfolio.get('cash', 0):.2f}",
         "portfolio_positions": json.dumps(portfolio.get("positions", {}), indent=2),
         "margin_requirement": f"{portfolio.get('margin_requirement', 0):.2f}",
