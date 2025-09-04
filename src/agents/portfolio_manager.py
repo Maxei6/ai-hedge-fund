@@ -11,7 +11,7 @@ from pydantic import BaseModel, Field
 from typing_extensions import Literal
 from src.utils.progress import progress
 from src.utils.llm import call_llm
-from src.tools.alpaca_trading import submit_order
+from src.broker import AlpacaBroker, Broker
 
 
 class PortfolioDecision(BaseModel):
@@ -112,27 +112,30 @@ def portfolio_management_agent(state: AgentState, agent_id: str = "portfolio_man
 
     # Optionally execute trades via Alpaca when live trading is enabled
     if state["metadata"].get("live_trading"):
-        api_key = state["metadata"].get("alpaca_api_key")
-        api_secret = state["metadata"].get("alpaca_api_secret")
-        for ticker, decision in result.decisions.items():
-            action = decision.action.lower()
-            qty = int(decision.quantity)
-            if action == "hold" or qty <= 0:
-                continue
+        broker: Broker | None = state["metadata"].get("broker")
+        if broker is None:
+            api_key = state["metadata"].get("alpaca_api_key")
+            api_secret = state["metadata"].get("alpaca_api_secret")
+            if api_key and api_secret:
+                broker = AlpacaBroker(api_key, api_secret)
+        if broker:
+            for ticker, decision in result.decisions.items():
+                action = decision.action.lower()
+                qty = int(decision.quantity)
+                if action == "hold" or qty <= 0:
+                    continue
 
-            side = "buy" if action in ["buy", "cover"] else "sell"
-            try:
-                order = submit_order(
-                    symbol=ticker,
-                    qty=qty,
-                    side=side,
-                    api_key=api_key,
-                    api_secret=api_secret,
-                )
-                status_msg = f"Order {order.get('status', 'submitted')}"
-                progress.update_status(agent_id, ticker, status_msg)
-            except Exception as e:
-                progress.update_status(agent_id, ticker, f"Error: {e}")
+                side = "buy" if action in ["buy", "cover"] else "sell"
+                try:
+                    order = broker.submit_order(
+                        symbol=ticker,
+                        qty=qty,
+                        side=side,
+                    )
+                    status_msg = f"Order {order.get('status', 'submitted')}"
+                    progress.update_status(agent_id, ticker, status_msg)
+                except Exception as e:
+                    progress.update_status(agent_id, ticker, f"Error: {e}")
 
     progress.update_status(agent_id, None, "Done")
 
