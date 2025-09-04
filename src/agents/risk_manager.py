@@ -19,6 +19,7 @@ def risk_management_agent(state: AgentState, agent_id: str = "risk_management_ag
     risk_analysis = {}
     current_prices = {}  # Store prices here to avoid redundant API calls
     volatility_data = {}  # Store volatility metrics
+    var_data = {}  # Store VaR and CVaR metrics
     returns_by_ticker: dict[str, pd.Series] = {}  # For correlation analysis
 
     # First, fetch prices and calculate volatility for all relevant tickers
@@ -58,6 +59,7 @@ def risk_management_agent(state: AgentState, agent_id: str = "risk_management_ag
             daily_returns = prices_df["close"].pct_change().dropna()
             if len(daily_returns) > 0:
                 returns_by_ticker[ticker] = daily_returns
+                var_data[ticker] = calculate_var_metrics(daily_returns)
             
             progress.update_status(
                 agent_id, 
@@ -119,12 +121,36 @@ def risk_management_agent(state: AgentState, agent_id: str = "risk_management_ag
             
         current_price = current_prices[ticker]
         vol_data = volatility_data.get(ticker, {})
-        
+        var_metrics = var_data.get(ticker, {"var_95": None, "cvar_95": None})
+
         # Calculate current market value of this position
         position = portfolio.get("positions", {}).get(ticker, {})
-        long_value = position.get("long", 0) * current_price
-        short_value = position.get("short", 0) * current_price
+        long_qty = position.get("long", 0)
+        short_qty = position.get("short", 0)
+        long_value = long_qty * current_price
+        short_value = short_qty * current_price
         current_position_value = abs(long_value - short_value)  # Use absolute exposure
+
+        # Stop-loss calculations
+        stop_loss_pct = position.get("stop_loss_pct", 0.1)
+        stop_loss_price = current_price * (1 - stop_loss_pct)
+        potential_loss = 0.0
+        distance_to_stop = None
+        if long_qty > 0:
+            entry = position.get("long_cost_basis", current_price)
+            stop_loss_price = entry * (1 - stop_loss_pct)
+            potential_loss = max(0.0, current_price - stop_loss_price) * long_qty
+            if current_price > 0:
+                distance_to_stop = (current_price - stop_loss_price) / current_price
+        elif short_qty > 0:
+            entry = position.get("short_cost_basis", current_price)
+            stop_loss_price = entry * (1 + stop_loss_pct)
+            potential_loss = max(0.0, stop_loss_price - current_price) * short_qty
+            if current_price > 0:
+                distance_to_stop = (stop_loss_price - current_price) / current_price
+        else:
+            if current_price > 0:
+                distance_to_stop = (current_price - stop_loss_price) / current_price
         
         # Volatility-adjusted limit pct
         vol_adjusted_limit_pct = calculate_volatility_adjusted_limit(
@@ -165,9 +191,10 @@ def risk_management_agent(state: AgentState, agent_id: str = "risk_management_ag
         # Convert to dollar position limit
         position_limit = total_portfolio_value * combined_limit_pct
         
-        # Calculate remaining limit for this position
-        remaining_position_limit = position_limit - current_position_value
-        
+        # Calculate remaining limit for this position (include stop-loss risk)
+        remaining_position_limit = position_limit - current_position_value - potential_loss
+        remaining_position_limit = max(0.0, remaining_position_limit)
+
         # Ensure we don't exceed available cash
         max_position_size = min(remaining_position_limit, portfolio.get("cash", 0))
         
@@ -181,6 +208,16 @@ def risk_management_agent(state: AgentState, agent_id: str = "risk_management_ag
                 "data_points": int(vol_data.get("data_points", 0))
             },
             "correlation_metrics": corr_metrics,
+            "risk_metrics": {
+                "var_95": None if var_metrics.get("var_95") is None else float(var_metrics["var_95"]),
+                "cvar_95": None if var_metrics.get("cvar_95") is None else float(var_metrics["cvar_95"]),
+            },
+            "stop_loss_metrics": {
+                "stop_loss_pct": float(stop_loss_pct),
+                "stop_loss_price": float(stop_loss_price),
+                "distance_to_stop_loss_pct": float(distance_to_stop) if distance_to_stop is not None else None,
+                "potential_loss": float(potential_loss),
+            },
             "reasoning": {
                 "portfolio_value": float(total_portfolio_value),
                 "current_position_value": float(current_position_value),
@@ -189,8 +226,9 @@ def risk_management_agent(state: AgentState, agent_id: str = "risk_management_ag
                 "combined_position_limit_pct": float(combined_limit_pct),
                 "position_limit": float(position_limit),
                 "remaining_limit": float(remaining_position_limit),
+                "stop_loss_risk": float(potential_loss),
                 "available_cash": float(portfolio.get("cash", 0)),
-                "risk_adjustment": f"Volatility x Correlation adjusted: {combined_limit_pct:.1%} (base {vol_adjusted_limit_pct:.1%})"
+                "risk_adjustment": f"Volatility x Correlation adjusted: {combined_limit_pct:.1%} (base {vol_adjusted_limit_pct:.1%})",
             },
         }
         
@@ -265,6 +303,17 @@ def calculate_volatility_metrics(prices_df: pd.DataFrame, lookback_days: int = 6
         "volatility_percentile": float(current_vol_percentile) if not np.isnan(current_vol_percentile) else 50.0,
         "data_points": len(recent_returns)
     }
+
+
+def calculate_var_metrics(daily_returns: pd.Series, confidence_level: float = 0.95) -> dict:
+    """Calculate historical Value at Risk (VaR) and Conditional VaR."""
+    if len(daily_returns) == 0:
+        return {"var_95": None, "cvar_95": None}
+
+    var = np.percentile(daily_returns, (1 - confidence_level) * 100)
+    cvar = daily_returns[daily_returns <= var].mean() if (daily_returns <= var).any() else var
+
+    return {"var_95": abs(float(var)), "cvar_95": abs(float(cvar))}
 
 
 def calculate_volatility_adjusted_limit(annualized_volatility: float) -> float:
