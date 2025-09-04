@@ -134,8 +134,7 @@ export function useFlowConnection(flowId: string | null) {
         abortController,
       });
 
-      // TODO: We should enhance the API to notify us when the connection completes
-      // For now, we'll rely on the complete event from the SSE stream
+      // Connection completion is handled via SSE complete events
       
     } catch (error) {
       console.error('Failed to start hedge fund run:', error);
@@ -170,8 +169,7 @@ export function useFlowConnection(flowId: string | null) {
         abortController,
       });
 
-      // TODO: We should enhance the API to notify us when the connection completes
-      // For now, we'll rely on the complete event from the SSE stream
+      // Connection completion is handled via SSE complete events
       
     } catch (error) {
       console.error('Failed to start backtest:', error);
