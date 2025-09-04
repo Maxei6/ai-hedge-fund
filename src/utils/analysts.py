@@ -17,9 +17,18 @@ from src.agents.valuation import valuation_analyst_agent
 from src.agents.warren_buffett import warren_buffett_agent
 from src.agents.rakesh_jhunjhunwala import rakesh_jhunjhunwala_agent
 from src.agents.mohnish_pabrai import mohnish_pabrai_agent
+from src.agents.research import research_analyst_agent
 
 # Define analyst configuration - single source of truth
 ANALYST_CONFIG = {
+    "research_analyst": {
+        "display_name": "Research Analyst",
+        "description": "Discovers promising tickers from market screeners and news",
+        "investing_style": "Surfaces opportunities using market activity and headlines.",
+        "agent_func": research_analyst_agent,
+        "type": "research",
+        "order": -1,
+    },
     "aswath_damodaran": {
         "display_name": "Aswath Damodaran",
         "description": "The Dean of Valuation",

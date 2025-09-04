@@ -110,11 +110,21 @@ def create_workflow(selected_analysts=None):
     # Default to all analysts if none selected
     if selected_analysts is None:
         selected_analysts = list(analyst_nodes.keys())
+
+    research_key = "research_analyst"
+    entry_node = "start_node"
+    if research_key in selected_analysts:
+        research_node_name, research_func = analyst_nodes[research_key]
+        workflow.add_node(research_node_name, research_func)
+        workflow.add_edge("start_node", research_node_name)
+        entry_node = research_node_name
+        selected_analysts = [k for k in selected_analysts if k != research_key]
+
     # Add selected analyst nodes
     for analyst_key in selected_analysts:
         node_name, node_func = analyst_nodes[analyst_key]
         workflow.add_node(node_name, node_func)
-        workflow.add_edge("start_node", node_name)
+        workflow.add_edge(entry_node, node_name)
 
     # Always add risk and portfolio management
     workflow.add_node("risk_management_agent", risk_management_agent)
