@@ -49,6 +49,9 @@ export interface HedgeFundRequest extends BaseHedgeFundRequest {
   end_date?: string;
   start_date?: string;
   initial_cash?: number;
+  live_trading?: boolean;
+  alpaca_api_key?: string;
+  alpaca_api_secret?: string;
 }
 
 export interface BacktestRequest extends BaseHedgeFundRequest {

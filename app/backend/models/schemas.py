@@ -132,6 +132,9 @@ class HedgeFundRequest(BaseHedgeFundRequest):
     end_date: Optional[str] = Field(default_factory=lambda: datetime.now().strftime("%Y-%m-%d"))
     start_date: Optional[str] = None
     initial_cash: float = 100000.0
+    live_trading: bool = False
+    alpaca_api_key: Optional[str] = None
+    alpaca_api_secret: Optional[str] = None
 
     def get_start_date(self) -> str:
         """Calculate start date if not provided"""

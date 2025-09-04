@@ -11,6 +11,7 @@ from pydantic import BaseModel, Field
 from typing_extensions import Literal
 from src.utils.progress import progress
 from src.utils.llm import call_llm
+from src.tools.alpaca_trading import submit_order
 
 
 class PortfolioDecision(BaseModel):
@@ -108,6 +109,30 @@ def portfolio_management_agent(state: AgentState, agent_id: str = "portfolio_man
     # Print the decision if the flag is set
     if state["metadata"]["show_reasoning"]:
         show_agent_reasoning({ticker: decision.model_dump() for ticker, decision in result.decisions.items()}, "Portfolio Manager")
+
+    # Optionally execute trades via Alpaca when live trading is enabled
+    if state["metadata"].get("live_trading"):
+        api_key = state["metadata"].get("alpaca_api_key")
+        api_secret = state["metadata"].get("alpaca_api_secret")
+        for ticker, decision in result.decisions.items():
+            action = decision.action.lower()
+            qty = int(decision.quantity)
+            if action == "hold" or qty <= 0:
+                continue
+
+            side = "buy" if action in ["buy", "cover"] else "sell"
+            try:
+                order = submit_order(
+                    symbol=ticker,
+                    qty=qty,
+                    side=side,
+                    api_key=api_key,
+                    api_secret=api_secret,
+                )
+                status_msg = f"Order {order.get('status', 'submitted')}"
+                progress.update_status(agent_id, ticker, status_msg)
+            except Exception as e:
+                progress.update_status(agent_id, ticker, f"Error: {e}")
 
     progress.update_status(agent_id, None, "Done")
 
