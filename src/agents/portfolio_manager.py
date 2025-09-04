@@ -7,6 +7,7 @@ from pydantic import BaseModel, Field
 from typing_extensions import Literal
 from src.utils.progress import progress
 from src.utils.llm import call_llm
+from src.broker.base import BrokerBase
 
 
 class PortfolioDecision(BaseModel):
@@ -84,6 +85,15 @@ def portfolio_management_agent(state: AgentState, agent_id: str = "portfolio_man
         content=json.dumps({ticker: decision.model_dump() for ticker, decision in result.decisions.items()}),
         name=agent_id,
     )
+
+    # Execute trades through broker if available
+    broker: BrokerBase | None = state.get("metadata", {}).get("broker")
+    if broker:
+        executed = state["data"].setdefault("executed_orders", {})
+        for ticker, decision in result.decisions.items():
+            if decision.action != "hold" and decision.quantity > 0:
+                broker.place_order(ticker, decision.quantity, decision.action)
+                executed[ticker] = decision.model_dump()
 
     # Print the decision if the flag is set
     if state["metadata"]["show_reasoning"]:
