@@ -51,6 +51,9 @@ def run_hedge_fund(
     selected_analysts: list[str] = [],
     model_name: str = "gpt-4.1",
     model_provider: str = "OpenAI",
+    live_trading: bool = False,
+    alpaca_api_key: str | None = None,
+    alpaca_api_secret: str | None = None,
 ):
     # Start progress tracking
     progress.start()
@@ -81,6 +84,9 @@ def run_hedge_fund(
                     "show_reasoning": show_reasoning,
                     "model_name": model_name,
                     "model_provider": model_provider,
+                    "live_trading": live_trading,
+                    "alpaca_api_key": alpaca_api_key,
+                    "alpaca_api_secret": alpaca_api_secret,
                 },
             },
         )

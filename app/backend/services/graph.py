@@ -172,6 +172,9 @@ def run_graph(
                 "model_name": model_name,
                 "model_provider": model_provider,
                 "request": request,  # Pass the request for agent-specific model access
+                "live_trading": getattr(request, "live_trading", False) if request else False,
+                "alpaca_api_key": getattr(request, "alpaca_api_key", None) if request else None,
+                "alpaca_api_secret": getattr(request, "alpaca_api_secret", None) if request else None,
             },
         },
     )
