@@ -69,18 +69,25 @@ Create a `.env` file for your API keys:
 cp .env.example .env
 ```
 
-Open and edit the `.env` file to add your API keys:
+Open and edit the `.env` file to add your LLM API keys:
 ```bash
 # For running LLMs hosted by openai (gpt-4o, gpt-4o-mini, etc.)
 OPENAI_API_KEY=your-openai-api-key
-
-# For getting financial data to power the hedge fund
-APCA_API_KEY_ID=your-financial-datasets-api-key
 ```
 
-**Important**: You must set at least one LLM API key (e.g. `OPENAI_API_KEY`, `GROQ_API_KEY`, `ANTHROPIC_API_KEY`, or `DEEPSEEK_API_KEY`) for the hedge fund to work. 
+Update `config.json` with your Alpaca API credentials for market data:
+```json
+{
+  "alpaca": {
+    "api_key_id": "your-alpaca-key-id",
+    "api_secret_key": "your-alpaca-secret-key"
+  }
+}
+```
 
-**Financial Data**: Data for AAPL, GOOGL, MSFT, NVDA, and TSLA is free and does not require an API key. For any other ticker, you will need to set the `APCA_API_KEY_ID` in the .env file.
+**Important**: You must set at least one LLM API key (e.g. `OPENAI_API_KEY`, `GROQ_API_KEY`, `ANTHROPIC_API_KEY`, or `DEEPSEEK_API_KEY`) for the hedge fund to work.
+
+**Financial Data**: Data for AAPL, GOOGL, MSFT, NVDA, and TSLA is free and does not require an API key. For any other ticker, supply your Alpaca credentials in `config.json`.
 
 ## How to Run
 

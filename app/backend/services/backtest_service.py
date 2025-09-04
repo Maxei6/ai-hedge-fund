@@ -224,7 +224,13 @@ class BacktestService:
         end_date_dt = datetime.strptime(self.end_date, "%Y-%m-%d")
         start_date_dt = end_date_dt - relativedelta(years=1)
         start_date_str = start_date_dt.strftime("%Y-%m-%d")
-        api_key = self.request.api_keys.get("APCA_API_KEY_ID")
+        api_key = None
+        if self.request.api_keys:
+            api_key = self.request.api_keys.get("APCA_API_KEY_ID")
+        if not api_key:
+            from src.config import get_alpaca_keys
+
+            api_key, _ = get_alpaca_keys()
 
         for ticker in self.tickers:
             get_prices(ticker, start_date_str, self.end_date, api_key=api_key)

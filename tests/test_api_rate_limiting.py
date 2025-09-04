@@ -23,7 +23,7 @@ class TestRateLimiting:
         
         # Call the function
         headers = {"X-API-KEY": "test-key"}
-        url = "https://api.financialdatasets.ai/test"
+        url = "https://data.alpaca.markets/test"
         
         result = _make_api_request(url, headers)
         
@@ -62,7 +62,7 @@ class TestRateLimiting:
         
         # Call the function
         headers = {"X-API-KEY": "test-key"}
-        url = "https://api.financialdatasets.ai/test"
+        url = "https://data.alpaca.markets/test"
         
         result = _make_api_request(url, headers)
         
@@ -94,7 +94,7 @@ class TestRateLimiting:
         
         # Call the function with POST method
         headers = {"X-API-KEY": "test-key"}
-        url = "https://api.financialdatasets.ai/test"
+        url = "https://data.alpaca.markets/test"
         json_data = {"test": "data"}
         
         result = _make_api_request(url, headers, method="POST", json_data=json_data)
@@ -126,7 +126,7 @@ class TestRateLimiting:
         
         # Call the function
         headers = {"X-API-KEY": "test-key"}
-        url = "https://api.financialdatasets.ai/test"
+        url = "https://data.alpaca.markets/test"
         
         result = _make_api_request(url, headers)
         
@@ -153,7 +153,7 @@ class TestRateLimiting:
         
         # Call the function
         headers = {"X-API-KEY": "test-key"}
-        url = "https://api.financialdatasets.ai/test"
+        url = "https://data.alpaca.markets/test"
         
         result = _make_api_request(url, headers)
         
@@ -228,7 +228,7 @@ class TestRateLimiting:
         
         # Call the function with max_retries=2
         headers = {"X-API-KEY": "test-key"}
-        url = "https://api.financialdatasets.ai/test"
+        url = "https://data.alpaca.markets/test"
         
         result = _make_api_request(url, headers, max_retries=2)
         

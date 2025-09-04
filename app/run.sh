@@ -140,7 +140,7 @@ setup_environment() {
             print_warning "Please edit the .env file in the root directory to add your API keys:"
             print_warning "  - OPENAI_API_KEY=your-openai-api-key"
             print_warning "  - GROQ_API_KEY=your-groq-api-key"
-            print_warning "  - APCA_API_KEY_ID=your-financial-datasets-api-key"
+            print_warning "  - Update config.json with your Alpaca API credentials"
             echo ""
         else
             print_error "No .env or .env.example file found in the root directory."

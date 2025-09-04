@@ -12,6 +12,7 @@ from src.data.models import (
     LineItem,
     InsiderTrade,
 )
+from src.config import get_alpaca_keys
 
 # Global cache instance
 _cache = get_cache()
@@ -19,8 +20,9 @@ _cache = get_cache()
 
 def _alpaca_headers(api_key: str | None = None, secret_key: str | None = None) -> dict:
     """Build headers for Alpaca API requests."""
-    api_key = api_key or os.environ.get("APCA_API_KEY_ID")
-    secret_key = secret_key or os.environ.get("APCA_API_SECRET_KEY")
+    cfg_key, cfg_secret = get_alpaca_keys()
+    api_key = api_key or cfg_key or os.environ.get("APCA_API_KEY_ID")
+    secret_key = secret_key or cfg_secret or os.environ.get("APCA_API_SECRET_KEY")
     headers = {}
     if api_key:
         headers["APCA-API-KEY-ID"] = api_key

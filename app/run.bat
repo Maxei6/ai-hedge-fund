@@ -153,7 +153,7 @@ if not exist "..\.env" (
         echo %WARNING% Please edit ..\.env to add your API keys:
         echo %WARNING%   - OPENAI_API_KEY=your-openai-api-key
         echo %WARNING%   - GROQ_API_KEY=your-groq-api-key
-        echo %WARNING%   - APCA_API_KEY_ID=your-financial-datasets-api-key
+        echo %WARNING%   - Update config.json with your Alpaca API credentials
         echo.
     ) else (
         echo %ERROR% No .env or .env.example file found in the root directory.
