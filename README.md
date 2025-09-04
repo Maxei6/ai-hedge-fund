@@ -22,6 +22,7 @@ This system employs several agents working together:
 16. Technicals Agent - Analyzes technical indicators and generates trading signals
 17. Risk Manager - Calculates risk metrics and sets position limits
 18. Portfolio Manager - Makes final trading decisions and generates orders
+19. Predictive Model - Loads a simple linear model from `models/predictive_model.json`
 
 <img width="1042" alt="Screenshot 2025-03-22 at 6 19 07 PM" src="https://github.com/user-attachments/assets/cbae3dcf-b571-490d-b0ad-3f0f035ac0d4" />
 
