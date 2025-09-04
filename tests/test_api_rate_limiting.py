@@ -182,15 +182,15 @@ class TestRateLimiting:
         mock_200_response = Mock()
         mock_200_response.status_code = 200
         mock_200_response.json.return_value = {
-            "ticker": "AAPL",
-            "prices": [
+            "symbol": "AAPL",
+            "bars": [
                 {
-                    "time": "2024-01-01T00:00:00Z",
-                    "open": 100.0,
-                    "close": 101.0,
-                    "high": 102.0,
-                    "low": 99.0,
-                    "volume": 1000
+                    "t": "2024-01-01T00:00:00Z",
+                    "o": 100.0,
+                    "c": 101.0,
+                    "h": 102.0,
+                    "l": 99.0,
+                    "v": 1000
                 }
             ]
         }
@@ -198,7 +198,7 @@ class TestRateLimiting:
         mock_get.side_effect = [mock_429_response, mock_200_response]
         
         # Set environment variable for API key
-        with patch.dict(os.environ, {"FINANCIAL_DATASETS_API_KEY": "test-key"}):
+        with patch.dict(os.environ, {"APCA_API_KEY_ID": "test-key"}):
             # Call get_prices
             result = get_prices("AAPL", "2024-01-01", "2024-01-02")
         
