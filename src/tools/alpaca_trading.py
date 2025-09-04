@@ -3,18 +3,25 @@ from typing import Optional, List, Dict
 
 import requests
 
+from src.config import get_alpaca_keys
+
 ALPACA_BASE_URL = os.environ.get("ALPACA_BASE_URL", "https://paper-api.alpaca.markets")
 
 
-def _auth_headers(api_key: str, api_secret: str) -> Dict[str, str]:
+def _auth_headers(api_key: Optional[str] = None, api_secret: Optional[str] = None) -> Dict[str, str]:
     """Generate authentication headers for Alpaca API."""
+    cfg_key, cfg_secret = get_alpaca_keys()
+    api_key = api_key or cfg_key
+    api_secret = api_secret or cfg_secret
+    if not api_key or not api_secret:
+        raise ValueError("Alpaca API key and secret are required")
     return {
         "APCA-API-KEY-ID": api_key,
         "APCA-API-SECRET-KEY": api_secret,
     }
 
 
-def get_account(api_key: str, api_secret: str, base_url: Optional[str] = None) -> Dict:
+def get_account(api_key: Optional[str] = None, api_secret: Optional[str] = None, base_url: Optional[str] = None) -> Dict:
     """Retrieve account information from Alpaca."""
     url = f"{base_url or ALPACA_BASE_URL}/v2/account"
     response = requests.get(url, headers=_auth_headers(api_key, api_secret))
@@ -35,9 +42,6 @@ def submit_order(
     **kwargs,
 ) -> Dict:
     """Submit an order to Alpaca."""
-    if not api_key or not api_secret:
-        raise ValueError("Alpaca API key and secret are required")
-
     url = f"{base_url or ALPACA_BASE_URL}/v2/orders"
     payload = {
         "symbol": symbol,
@@ -53,7 +57,7 @@ def submit_order(
     return response.json()
 
 
-def get_order(order_id: str, api_key: str, api_secret: str, base_url: Optional[str] = None) -> Dict:
+def get_order(order_id: str, api_key: Optional[str] = None, api_secret: Optional[str] = None, base_url: Optional[str] = None) -> Dict:
     """Get information about a specific order."""
     url = f"{base_url or ALPACA_BASE_URL}/v2/orders/{order_id}"
     response = requests.get(url, headers=_auth_headers(api_key, api_secret))
@@ -69,8 +73,6 @@ def list_orders(
     base_url: Optional[str] = None,
 ) -> List[Dict]:
     """List orders from Alpaca."""
-    if not api_key or not api_secret:
-        raise ValueError("Alpaca API key and secret are required")
     url = f"{base_url or ALPACA_BASE_URL}/v2/orders"
     params = {"status": status}
     response = requests.get(url, params=params, headers=_auth_headers(api_key, api_secret))

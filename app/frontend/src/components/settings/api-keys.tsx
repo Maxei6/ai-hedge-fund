@@ -16,10 +16,10 @@ interface ApiKey {
 const FINANCIAL_API_KEYS: ApiKey[] = [
   {
     key: 'APCA_API_KEY_ID',
-    label: 'Financial Datasets API',
+    label: 'Alpaca API',
     description: 'For getting financial data to power the hedge fund',
-    url: 'https://financialdatasets.ai/',
-    placeholder: 'your-financial-datasets-api-key'
+    url: 'https://alpaca.markets/',
+    placeholder: 'your-alpaca-api-key'
   }
 ];
 

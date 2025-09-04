@@ -43,9 +43,16 @@ OPENAI_API_KEY=your-openai-api-key
 
 # For running LLMs hosted by groq (deepseek, llama3, etc.)
 GROQ_API_KEY=your-groq-api-key
+```
 
-# For getting financial data to power the hedge fund
-APCA_API_KEY_ID=your-financial-datasets-api-key
+Edit `config.json` with your Alpaca API credentials:
+```json
+{
+  "alpaca": {
+    "api_key_id": "your-alpaca-key-id",
+    "api_secret_key": "your-alpaca-secret-key"
+  }
+}
 ```
 
 ## Running the Server

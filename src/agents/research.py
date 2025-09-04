@@ -8,7 +8,6 @@ from pydantic import BaseModel
 from langchain_core.messages import HumanMessage
 
 from src.graph.state import AgentState
-from src.utils.api_key import get_api_key_from_state
 from src.utils.llm import call_llm
 from src.utils.progress import progress
 
@@ -53,7 +52,7 @@ def research_analyst_agent(state: AgentState, agent_id: str = "research_analyst_
     """Generate a list of promising tickers using Alpaca screeners and news."""
     data = state.get("data", {})
     existing = set(data.get("tickers", []))
-    api_key = get_api_key_from_state(state, "ALPACA_API_KEY")
+    api_key = get_api_key_from_state(state, "APCA_API_KEY_ID")
 
     progress.update_status(agent_id, None, "Gathering market data")
     screener_symbols = _fetch_screener_symbols(api_key)
